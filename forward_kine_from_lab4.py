@@ -25,8 +25,8 @@ def Get_MS():
 	S = np.zeros((6,6))
 	
 	# find M and S by measuring the UR3 robot arm
-	M = np.array([[0.,1.,0.,0.39],[0.,0.,1.,0.409],[1.,0.,0.,0.152], [0.,0.,0.,1.]])
-	S = np.array([[0.,0.,0.,0.,1.,0.], [0.,1.,1.,1.,0.,1.],[1.,0.,0.,0.,0.,0.],[0.15,-0.152,-0.152,-0.152,0.,-0.152],[0.15,0.,0.,0.,0.152,0.],[0.,-0.15,0.094,0.307,-0.26,0.39]])
+	M = np.array([[1.,0.,0.,-0.38113],[0.,1.,0.,8.5324e-5],[0.,0.,1.,0.6511], [0.,0.,0.,1.]])
+	S = np.array([[0.,-1.,-1.,-1.,0.,-1.], [0.,0.,0.,0.,0.,0.],[1.,0.,0.,0.,1.,0.],[8.5577e-05,0.,0.,0.,8.513e-05,0.],[-0.20012,-0.60887,-0.85252,-1.0658,-0.08775,-1.1511],[0,5.4419e-05,0.0001303,8.5157e-05,0,8.5086e-05]])
 
 	
 	# ==============================================================#
@@ -66,8 +66,8 @@ def lab_fk(theta1, theta2, theta3, theta4, theta5, theta6):
 	
 	print(str(T) + "\n")
 
-	return_value[0] = theta1 + 180
-	return_value[1] = theta2 + 90
+	return_value[0] = theta1
+	return_value[1] = theta2
 	return_value[2] = theta3
 	return_value[3] = theta4
 	return_value[4] = theta5
@@ -99,6 +99,10 @@ for i in range(jointNum):
     _, returnHandle = sim.simxGetObjectHandle(clientID, jointName + str(i+1), sim.simx_opmode_blocking)
     jointHandle[i] = returnHandle
 _, baseHandle = sim.simxGetObjectHandle(clientID, baseName, sim.simx_opmode_blocking)
+
+_,MotorHandle_Left = sim.simxGetObjectHandle(clientID,'Revolute_left',sim.simx_opmode_blocking)
+_,MotorHandle_Right = sim.simxGetObjectHandle(clientID,'Revolute_right',sim.simx_opmode_blocking)
+#_, baseHandle = sim.simxGetObjectHandle(clientID, 'CarBody', sim.simx_opmode_blocking)
 print('Handles Found!')
 
 # read the initial value of joints
@@ -113,8 +117,8 @@ lastCmdTime=sim.simxGetLastCmdTime(clientID)  # record the current time
 sim.simxSynchronousTrigger(clientID)  
 
 
-iii = 0 #loop index
-increase_flag = 0
+#iii = 0 #loop index
+#increase_flag = 0
 # trigger the sim
 while sim.simxGetConnectionId(clientID) != -1:
     currCmdTime=sim.simxGetLastCmdTime(clientID)
@@ -125,12 +129,17 @@ while sim.simxGetConnectionId(clientID) != -1:
         # print(round(jpos * 180 / math.pi, 2))
         jointConfig[i] = jpos
         
-    theta1 = iii
-    theta2 = -iii
-    theta3 = iii
-    theta4 = iii/4
-    theta5 = -iii
+    _,MotorHandle_Left = sim.simxGetObjectHandle(clientID,'Revolute_left',sim.simx_opmode_blocking)
+    _,MotorHandle_Right = sim.simxGetObjectHandle(clientID,'Revolute_right',sim.simx_opmode_blocking)
+    
+    theta1 = 100
+    theta2 = 20
+    theta3 = 0
+    theta4 = 0
+    theta5 = 0
     theta6 = 0
+    Left_vel = 1
+    Right_vel = 0.5
 
 
     theta_out = lab_fk(theta1, theta2, theta3, theta4, theta5, theta6)
@@ -143,15 +152,17 @@ while sim.simxGetConnectionId(clientID) != -1:
     sim.simxSetJointTargetPosition(clientID, jointHandle[3], theta_out[3]/(180 / math.pi), sim.simx_opmode_oneshot)
     sim.simxSetJointTargetPosition(clientID, jointHandle[4], theta_out[4]/(180 / math.pi), sim.simx_opmode_oneshot)
     sim.simxSetJointTargetPosition(clientID, jointHandle[5], theta_out[5]/(180 / math.pi), sim.simx_opmode_oneshot)
+    sim.simxSetJointTargetVelocity(clientID,MotorHandle_Left,Left_vel,sim.simx_opmode_oneshot  )
+    sim.simxSetJointTargetVelocity(clientID,MotorHandle_Right,Right_vel,sim.simx_opmode_oneshot  )
     
-    if(iii==90):
-        increase_flag = 1
-    if(iii==0):
-        increase_flag = 0
-    if(increase_flag==0):    
-        iii = iii+1
-    else:
-        iii = iii-1
+    #if(iii==90):
+       # increase_flag = 1
+    #if(iii==0):
+       # increase_flag = 0
+    #if(increase_flag==0):    
+       # iii = iii+1
+    #else:
+        #iii = iii-1
 
     
     sim.simxPauseCommunication(clientID, False)
