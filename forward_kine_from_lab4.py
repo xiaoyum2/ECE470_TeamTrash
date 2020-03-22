@@ -25,8 +25,8 @@ def Get_MS():
 	S = np.zeros((6,6))
 	
 	# find M and S by measuring the UR3 robot arm
-	M = np.array([[1.,0.,0.,-0.38113],[0.,1.,0.,8.5324e-5],[0.,0.,1.,0.6511], [0.,0.,0.,1.]])
-	S = np.array([[0.,-1.,-1.,-1.,0.,-1.], [0.,0.,0.,0.,0.,0.],[1.,0.,0.,0.,1.,0.],[8.5577e-05,0.,0.,0.,8.513e-05,0.],[-0.20012,-0.60887,-0.85252,-1.0658,-0.08775,-1.1511],[0,5.4419e-05,0.0001303,8.5157e-05,0,8.5086e-05]])
+	M = np.array([[1.,0.,0.,-0.38113],[0.,1.,0.,0.000085324],[0.,0.,1.,0.6511], [0.,0.,0.,1.]])
+	S = np.array([[0.,-1.,-1.,-1.,0.,-1.], [0.,0.,0.,0.,0.,0.],[1.,0.,0.,0.,1.,0.],[8.55770000000000e-05,0,0,0,8.51300000000000e-05,0],[-0.000119999999999981,-0.108870000000000,-0.352520000000000,-0.565800000000000,0.112225000000000,-0.651100000000000],[0,5.44190000000000e-05,0.000130300000000000,8.51570000000000e-05,0,8.50860000000000e-05]])
 
 	
 	# ==============================================================#
@@ -58,7 +58,7 @@ def lab_fk(theta1, theta2, theta3, theta4, theta5, theta6):
 	s5_mat = np.array([[0, -S[2][4], S[1][4], S[3][4]],[S[2][4], 0, -S[0][4], S[4][4]], [-S[1][4], S[0][4], 0, S[5][4]], [0,0,0,0]])
 	s6_mat = np.array([[0, -S[2][5], S[1][5], S[3][5]],[S[2][5], 0, -S[0][5], S[4][5]], [-S[1][5], S[0][5], 0, S[5][5]], [0,0,0,0]])
 
-	T = expm(s1_mat*theta1).dot(expm(s2_mat*theta2)).dot(expm(s3_mat*theta3)).dot(expm(s4_mat*theta4)).dot(expm(s5_mat*theta5)).dot(expm(s6_mat*theta6)).dot(M)
+	T = expm(s1_mat*theta1/(180 / math.pi)).dot(expm(s2_mat*theta2/(180 / math.pi))).dot(expm(s3_mat*theta3/(180 / math.pi))).dot(expm(s4_mat*theta4/(180 / math.pi))).dot(expm(s5_mat*theta5/(180 / math.pi))).dot(expm(s6_mat*theta6/(180 / math.pi))).dot(M)
 
 
 
@@ -102,6 +102,8 @@ _, baseHandle = sim.simxGetObjectHandle(clientID, baseName, sim.simx_opmode_bloc
 
 _,MotorHandle_Left = sim.simxGetObjectHandle(clientID,'Revolute_left',sim.simx_opmode_blocking)
 _,MotorHandle_Right = sim.simxGetObjectHandle(clientID,'Revolute_right',sim.simx_opmode_blocking)
+
+_,TCP = sim.simxGetObjectHandle(clientID,'TCP',sim.simx_opmode_blocking)
 #_, baseHandle = sim.simxGetObjectHandle(clientID, 'CarBody', sim.simx_opmode_blocking)
 print('Handles Found!')
 
@@ -131,15 +133,15 @@ while sim.simxGetConnectionId(clientID) != -1:
         
     _,MotorHandle_Left = sim.simxGetObjectHandle(clientID,'Revolute_left',sim.simx_opmode_blocking)
     _,MotorHandle_Right = sim.simxGetObjectHandle(clientID,'Revolute_right',sim.simx_opmode_blocking)
-    
+    _,TCP = sim.simxGetObjectHandle(clientID,'TCP',sim.simx_opmode_blocking)
     theta1 = 100
     theta2 = 20
     theta3 = 0
     theta4 = 0
-    theta5 = 0
+    theta5 = 30
     theta6 = 0
-    Left_vel = 1
-    Right_vel = 0.5
+    Left_vel = 0
+    Right_vel = 0
 
 
     theta_out = lab_fk(theta1, theta2, theta3, theta4, theta5, theta6)
@@ -164,6 +166,7 @@ while sim.simxGetConnectionId(clientID) != -1:
     #else:
         #iii = iii-1
 
+    print('real position:',sim.simxGetObjectPosition(clientID,TCP,baseHandle,sim.simx_opmode_oneshot))
     
     sim.simxPauseCommunication(clientID, False)
     lastCmdTime=currCmdTime    
