@@ -1,6 +1,7 @@
 # ECE470_TeamTrash
 Code base for ECE470 Spring 2020 Project    
 Newest update for Update 3, Apr. 12th, 2020  
-__UR3_Update2.ttt__ contains the CoppeliaSim Scene file.  
-__forward_kine_from_lab4.py__ contains the Python code for calculating forward kinematics and remote manipulating.  
-__trial.ttt__ contains a car carrying UR3, but the tilting problem is not solved yet.
+__Update3.ttt__ contains the CoppeliaSim Scene file, including a working copy of openCV example and grasper trying to approach.  
+__update3_openCV_IK.py__ contains the Python code for inverse kinematics and openCV API.  
+__core.py__ is the file from Modern Robotics to borrow useful functions, though it's not used for calculating using numerical method is too difficult to find the initial value.  
+
