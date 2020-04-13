@@ -1,7 +1,7 @@
 
 import sim
 import time
-#import core
+import core
 import math
 
 from PIL import Image as I
@@ -157,7 +157,7 @@ if clientID!=-1:
   #_, baseHandle = sim.simxGetObjectHandle(clientID, 'CarBody', sim.simx_opmode_blocking)
   print('Handles Found!')
 
-# read the initial value of joints
+  # read the initial value of joints
   jointConfig = np.zeros((jointNum,))
   for i in range(jointNum):
       _, jpos = sim.simxGetJointPosition(clientID, jointHandle[i], sim.simx_opmode_streaming)
@@ -179,7 +179,7 @@ if clientID!=-1:
       ret2 = track_red_object(img2)
       ret3 = track_blue_object(img2)
 
-      # overlay rectangle marker if something is found by OpenCV
+      # draw a rectangle on the image if something is found by OpenCV
       if ret:
         cv2.rectangle(img2,(ret[0]-5,ret[1]-5), (ret[0]+5,ret[1]+5), (0xff,0xf4,0x0d), 1)
         
@@ -197,6 +197,7 @@ if clientID!=-1:
       
       beta = 0.39956/26
       
+      #calculate the pixel location of the center of the car by two circles
       center_pix_x = (ret2[0]+ret3[0])/2
       center_pix_y = (ret2[1]+ret3[1])/2
       #print(center_pix_y)
@@ -211,6 +212,7 @@ if clientID!=-1:
       x_realdis = x_ob_cf*beta
       y_realdis = y_ob_cf*beta
       r_realdis = np.sqrt(x_realdis**2+y_realdis**2)
+      
       #decide the sign, might not be correct by now
       if(ret[0]>ret2[0] and ret[0]>ret3[0]):
           x_realdis = -x_realdis
@@ -219,18 +221,23 @@ if clientID!=-1:
       print(x_realdis)
       print(y_realdis)
       
-#      T = np.array([[0.,-1.,0.,x_realdis],[0.,0.,-1.,y_realdis],[1.,0.,0.,0], [0.,0.,0.,1.]])
 #      
-#      #not used, numerical method
 #      
-#      thetalist0 = np.array([[math.pi/9],[-math.pi/6],[-math.pi/3],[0],[math.pi/2],[0]])
+      #not used, numerical method
+#      T = np.array([[-1.,0.,0.,x_realdis],[0.,0.,-1.,y_realdis],[0.,-1.,0.,-0.01], [0.,0.,0.,1.]])
+#      thetalist0 = np.array([[2.1097752052199725],[0.7690414409997549],[1.8524227896762182],[-1.0506679038810764],[0],[0]])
 #      theta_op = thetalist0
 #      success=False
 #      while(success==False):
-#          theta_op,success = core.IKinSpace(S, M, T, thetalist0, 1, 0.001)
+#          theta_op,success = core.IKinSpace(S, M, T, thetalist0, 0.01, 0.01)
 #          #print(theta_op)
 #          print(success)
-#          thetalist0[0] = thetalist0[0]+math.pi/10 
+          
+          
+          
+          
+          
+          
       theta_joint1 = math.atan2(x_realdis,-y_realdis)
       fix = 0.38125
       L3 = 0.24365
@@ -263,7 +270,8 @@ if clientID!=-1:
       
       time.sleep(1)
       
-      #detect again
+      #detect again, since the moving of robot arm sometimes cause the car to slightly move
+      #but this part should be bettered, as now it takes time and it's inefficient to openCV twice
       image_byte_array = numpy.array(image,dtype=numpy.uint8)
       image_buffer = I.frombuffer("RGB", (resolution[0],resolution[1]), image_byte_array, "raw", "RGB", 0, 1)
       img2 = numpy.asarray(image_buffer)
@@ -272,7 +280,7 @@ if clientID!=-1:
       ret2 = track_red_object(img2)
       ret3 = track_blue_object(img2)
 
-      # overlay rectangle marker if something is found by OpenCV
+      
       if ret:
         cv2.rectangle(img2,(ret[0]-5,ret[1]-5), (ret[0]+5,ret[1]+5), (0xff,0xf4,0x0d), 1)
         
@@ -311,7 +319,7 @@ if clientID!=-1:
           y_realdis = -y_realdis
       
       
-      
+      #use the calculated value of thetas
       
       theta1 = math.pi-(numpy.arccos(fix/r_realdis)+math.atan2(x_realdis,-y_realdis))
       theta3 = math.pi-np.arccos((L3**2+L4**2-d**2)/(2*L3*L4))
